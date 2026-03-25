@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060810;
+  --surface: #0c0f1a;
+  --panel: #0f1220;
+  --border: rgba(0,255,180,0.1);
+  --border-bright: rgba(0,255,180,0.3);
+  --accent: #00ffb4;
+  --accent2: #00c8ff;
+  --accent3: #ff6b6b;
+  --accent4: #ffd93d;
+  --text: #e2e8f0;
+  --muted: #4a5568;
+  --muted2: #718096;
+  --danger: #ff4757;
+  --warn: #ffa502;
+  --safe: #2ed573;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Scanline effect */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,180,0.012) 2px,
+    rgba(0,255,180,0.012) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Ambient glow */
+.ambient {
+  position: fixed;
+  top: -300px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(0,255,180,0.04) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6,8,16,0.95);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(0,255,180,0.2), inset 0 0 8px rgba(0,255,180,0.05);
+}
+
+.logo-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+
+.logo-text {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,255,180,0.4);
+}
+
+.logo-text span { color: var(--text); }
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.7rem;
+  color: var(--muted2);
+  letter-spacing: 0.08em;
+}
+
+.status-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--safe);
+  box-shadow: 0 0 6px var(--safe);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── TABS ── */
+.tabs-wrapper {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  gap: 0;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs-wrapper::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  text-shadow: 0 0 12px rgba(0,255,180,0.4);
+}
+
+.tab-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ── MAIN ── */
+main {
+  position: relative;
+  z-index: 1;
+  padding: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tab-panel { display: none; animation: fadeIn 0.25s ease; }
+.tab-panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PANEL TITLE ── */
+.panel-header {
+  margin-bottom: 24px;
+}
+
+.panel-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.panel-title span { color: var(--accent); }
+
+.panel-sub {
+  font-size: 0.72rem;
+  color: var(--muted2);
+  letter-spacing: 0.06em;
+}
+
+/* ── INPUT AREA ── */
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.soc-textarea {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.6;
+}
+
+.soc-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.soc-input::placeholder,
+.soc-textarea::placeholder { color: var(--muted); }
+
+.soc-input:focus,
+.soc-textarea:focus {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 0 2px rgba(0,255,180,0.07), 0 0 20px rgba(0,255,180,0.05);
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #060810;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0,255,180,0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--accent);
+}
+
+.btn-secondary:hover {
+  background: rgba(0,255,180,0.06);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  font-size: 0.72rem;
+  padding: 7px 12px;
+}
+
+.btn-ghost:hover { border-color: var(--border-bright); color: var(--text); }
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid rgba(255,71,87,0.3);
+  color: var(--danger);
+}
+
+.btn-danger:hover { background: rgba(255,71,87,0.08); }
+
+/* ── RESULT BOX ── */
+.result-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,255,180,0.03);
+}
+
+.result-label {
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.result-actions { display: flex; gap: 6px; }
+
+.result-content {
+  padding: 16px;
+  font-size: 0.82rem;
+  line-height: 1.8;
+  word-break: break-all;
+  color: var(--accent2);
+  white-space: pre-wrap;
+  min-height: 60px;
+}
+
+.result-content.empty { color: var(--muted); font-style: italic; }
+
+/* ── DEFANG GRID ── */
+.defang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+  .defang-grid { grid-template-columns: 1fr; }
+  main { padding: 16px; }
+  .tabs-wrapper { padding: 0 12px; }
+  header { padding: 14px 16px; }
+}
+
+/* ── IP LOOKUP TABLE ── */
+.ip-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+thead tr {
+  background: rgba(0,255,180,0.05);
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0,255,180,0.04);
+  color: var(--text);
+  vertical-align: top;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: rgba(0,255,180,0.02); }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.badge-safe { background: rgba(46,213,115,0.15); color: var(--safe); border: 1px solid rgba(46,213,115,0.25); }
+.badge-warn { background: rgba(255,165,2,0.15); color: var(--warn); border: 1px solid rgba(255,165,2,0.25); }
+.badge-danger { background: rgba(255,71,87,0.15); color: var(--danger); border: 1px solid rgba(255,71,87,0.25); }
+.badge-unknown { background: rgba(113,128,150,0.15); color: var(--muted2); border: 1px solid rgba(113,128,150,0.25); }
+
+/* ── PORT TABLE ── */
+.port-search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.port-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.port-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.port-card:hover { border-color: var(--border-bright); }
+
+.port-number {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.port-proto {
+  font-size: 0.7rem;
+  color: var(--accent2);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.port-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.port-desc {
+  font-size: 0.72rem;
+  color: var(--muted2);
+  line-height: 1.5;
+}
+
+.port-risk {
+  margin-top: 10px;
+}
+
+/* ── DOMAIN ── */
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.domain-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.domain-card-header {
+  padding: 12px 16px;
+  background: rgba(0,200,255,0.05);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.domain-card-title {
+  font-family: var(--display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
+.domain-card-body { padding: 16px; }
+
+.kv-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.76rem;
+  align-items: flex-start;
+}
+
+.kv-key {
+  color: var(--muted2);
+  min-width: 90px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.kv-val {
+  color: var(--text);
+  word-break: break-all;
+}
+
+.kv-val.accent { color: var(--accent); }
+.kv-val.danger { color: var(--danger); }
+.kv-val.warn { color: var(--warn); }
+
+/* ── EMPTY / LOADING ── */
+.placeholder {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.placeholder svg {
+  width: 40px; height: 40px;
+  stroke: var(--muted);
+  fill: none;
+  stroke-width: 1;
+  margin: 0 auto 16px;
+  display: block;
+  opacity: 0.4;
+}
+
+.loading {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,255,180,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--panel);
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  z-index: 9998;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Divider */
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* Tag list */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  background: rgba(0,200,255,0.1);
+  border: 1px solid rgba(0,200,255,0.2);
+  color: var(--accent2);
+}
+
+/* Quick actions strip */
+.quick-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.quick-label {
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <div class="logo-text">SOC<span>kit</span></div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"><div class="dot"></div> LIVE</div>
+    <span id="clock">--:--:-- UTC</span>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs-wrapper">
+  <button class="tab-btn active" onclick="switchTab('defang', this)">
+    <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+    Defang
+  </button>
+  <button class="tab-btn" onclick="switchTab('iplookup', this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    IP Lookup
+  </button>
+  <button class="tab-btn" onclick="switchTab('domain', this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Domain Lookup
+  </button>
+  <button class="tab-btn" onclick="switchTab('ports', this)">
+    <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    Port Reference
+  </button>
+  <button class="tab-btn" onclick="switchTab('encoder', this)">
+    <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+    Hash / Encode
+  </button>
+</div>
+
+<!-- MAIN -->
+<main>
+
+<!-- ════════════ DEFANG ════════════ -->
+<div class="tab-panel active" id="tab-defang">
+  <div class="panel-header">
+    <div class="panel-title">URL & IP <span>Defanger</span></div>
+    <div class="panel-sub">Safely neutralise indicators for sharing in reports and tickets</div>
+  </div>
+
+  <div class="quick-strip">
+    <span class="quick-label">Paste Examples →</span>
+    <button class="btn btn-ghost" onclick="loadExample('url')">URL Sample</button>
+    <button class="btn btn-ghost" onclick="loadExample('ip')">IP Sample</button>
+    <button class="btn btn-ghost" onclick="loadExample('mixed')">Mixed Sample</button>
+    <button class="btn btn-ghost btn-danger" onclick="clearDefang()">Clear</button>
+  </div>
+
+  <div class="input-row">
+    <textarea class="soc-textarea" id="defang-input" placeholder="Paste URLs, IPs, or domains here — one per line or comma-separated...
+e.g. http://malicious.example.com/payload.exe
+     192.168.1.1
+     evil-domain.ru"></textarea>
+  </div>
+
+  <div class="input-row">
+    <button class="btn btn-primary" onclick="runDefang()">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Defang All
+    </button>
+    <button class="btn btn-secondary" onclick="runRefang()">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Re-fang
+    </button>
+  </div>
+
+  <div class="defang-grid">
+    <div class="result-box">
+      <div class="result-header">
+        <div class="result-label">⚡ Defanged Output</div>
+        <div class="result-actions">
+          <button class="btn btn-ghost" onclick="copyResult('defang-out')">Copy</button>
+        </div>
+      </div>
+      <div class="result-content empty" id="defang-out">Defanged indicators will appear here...</div>
+    </div>
+    <div class="result-box">
+      <div class="result-header">
+        <div class="result-label">🔁 Re-fanged Output</div>
+        <div class="result-actions">
+          <button class="btn btn-ghost" onclick="copyResult('refang-out')">Copy</button>
+        </div>
+      </div>
+      <div class="result-content empty" id="refang-out">Re-fanged indicators will appear here...</div>
+    </div>
+  </div>
+
+  <div class="result-box">
+    <div class="result-header">
+      <div class="result-label">📋 Parsed Indicators</div>
+      <div class="result-actions">
+        <button class="btn btn-ghost" onclick="copyResult('ioc-table-text')">Copy as Text</button>
+      </div>
+    </div>
+    <div id="ioc-parsed-area" style="padding:16px;">
+      <div class="placeholder">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Paste indicators above and click Defang All
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ IP LOOKUP ════════════ -->
+<div class="tab-panel" id="tab-iplookup">
+  <div class="panel-header">
+    <div class="panel-title">Bulk IP <span>Lookup</span></div>
+    <div class="panel-sub">Geolocation, ASN, and threat context for multiple IPs at once</div>
+  </div>
+
+  <div class="input-row">
+    <textarea class="soc-textarea" id="ip-input" placeholder="Enter IPs — one per line or comma-separated&#10;e.g.&#10;8.8.8.8&#10;1.1.1.1&#10;185.220.101.1"></textarea>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:140px;">
+      <button class="btn btn-primary" onclick="runIPLookup()" style="height:100%;flex:1;flex-direction:column;gap:4px;">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        Lookup IPs
+      </button>
+      <button class="btn btn-ghost" onclick="loadIPExample()">Load Example</button>
+      <button class="btn btn-ghost btn-danger" onclick="clearIP()">Clear</button>
+    </div>
+  </div>
+
+  <div id="ip-results">
+    <div class="placeholder">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Enter IPs above and click Lookup IPs
+    </div>
+  </div>
+
+  <div id="ip-summary" style="display:none;" class="result-box" style="margin-top:16px;">
+    <div class="result-header">
+      <div class="result-label">Export</div>
+      <div class="result-actions">
+        <button class="btn btn-ghost" onclick="exportIPCSV()">Export CSV</button>
+        <button class="btn btn-ghost" onclick="copyIPTable()">Copy Table</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ DOMAIN ════════════ -->
+<div class="tab-panel" id="tab-domain">
+  <div class="panel-header">
+    <div class="panel-title">Domain <span>Lookup</span></div>
+    <div class="panel-sub">WHOIS-style info, DNS records, and reputation signals</div>
+  </div>
+
+  <div class="input-row">
+    <input class="soc-input" id="domain-input" type="text" placeholder="e.g. example.com  or  185.220.101.1" />
+    <button class="btn btn-primary" onclick="runDomainLookup()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Investigate
+    </button>
+    <button class="btn btn-ghost" onclick="loadDomainExample()">Example</button>
+  </div>
+
+  <div id="domain-results">
+    <div class="placeholder">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Enter a domain or IP to investigate
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ PORTS ════════════ -->
+<div class="tab-panel" id="tab-ports">
+  <div class="panel-header">
+    <div class="panel-title">Port <span>Reference</span></div>
+    <div class="panel-sub">Common ports, protocols, and their security relevance</div>
+  </div>
+
+  <div class="port-search-row">
+    <input class="soc-input" id="port-search" type="text" placeholder="Search port number or service name..." oninput="filterPorts()" />
+    <select class="soc-input" id="port-filter" style="flex:0 0 150px;" onchange="filterPorts()">
+      <option value="">All Protocols</option>
+      <option value="TCP">TCP</option>
+      <option value="UDP">UDP</option>
+      <option value="TCP/UDP">TCP/UDP</option>
+    </select>
+    <select class="soc-input" id="risk-filter" style="flex:0 0 150px;" onchange="filterPorts()">
+      <option value="">All Risk Levels</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+  </div>
+
+  <div class="port-grid" id="port-grid"></div>
+</div>
+
+<!-- ════════════ ENCODER ════════════ -->
+<div class="tab-panel" id="tab-encoder">
+  <div class="panel-header">
+    <div class="panel-title">Hash & <span>Encode</span></div>
+    <div class="panel-sub">Base64, URL encode/decode, and hash identification</div>
+  </div>
+
+  <div class="input-row">
+    <textarea class="soc-textarea" id="encode-input" placeholder="Paste any string, hash, or encoded value..."></textarea>
+  </div>
+
+  <div class="quick-strip">
+    <span class="quick-label">Actions →</span>
+    <button class="btn btn-ghost" onclick="doEncode('b64encode')">Base64 Encode</button>
+    <button class="btn btn-ghost" onclick="doEncode('b64decode')">Base64 Decode</button>
+    <button class="btn btn-ghost" onclick="doEncode('urlencode')">URL Encode</button>
+    <button class="btn btn-ghost" onclick="doEncode('urldecode')">URL Decode</button>
+    <button class="btn btn-ghost" onclick="doEncode('hexencode')">Hex Encode</button>
+    <button class="btn btn-ghost" onclick="doEncode('hexdecode')">Hex Decode</button>
+    <button class="btn btn-ghost" onclick="doEncode('identify')">Identify Hash</button>
+    <button class="btn btn-ghost btn-danger" onclick="document.getElementById('encode-input').value='';document.getElementById('encode-out').textContent='Output will appear here...';document.getElementById('encode-out').className='result-content empty'">Clear</button>
+  </div>
+
+  <div class="result-box">
+    <div class="result-header">
+      <div class="result-label" id="encode-label">Output</div>
+      <div class="result-actions">
+        <button class="btn btn-ghost" onclick="copyResult('encode-out')">Copy</button>
+      </div>
+    </div>
+    <div class="result-content empty" id="encode-out">Output will appear here...</div>
+  </div>
+</div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toUTCString().split(' ').slice(4,5)[0] + ' UTC';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Tab switching ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Copy helper ──
+function copyResult(id) {
+  const el = document.getElementById(id);
+  const text = el.textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard ✓'));
+}
+
+// ═══════════════════════════════════════
+//  DEFANG
+// ═══════════════════════════════════════
+function defangText(text) {
+  return text
+    .replace(/https?:\/\//gi, 'hXXp://')
+    .replace(/ftp:\/\//gi, 'fXp://')
+    .replace(/\./g, '[.]')
+    .replace(/\[.\]\[.\]/g, '[.]') // clean double-replace artefact
+    .replace(/hXXp:\/\/\//g, 'hXXp://')
+    .replace(/@/g, '[@]');
+}
+
+function refangText(text) {
+  return text
+    .replace(/hXXps?:\/\//gi, 'https://')
+    .replace(/hXXp:\/\//gi, 'http://')
+    .replace(/fXp:\/\//gi, 'ftp://')
+    .replace(/\[\.\]/g, '.')
+    .replace(/\[@\]/g, '@');
+}
+
+function parseIndicators(raw) {
+  // split by newline, comma, space
+  return raw.split(/[\n,\s]+/).map(s => s.trim()).filter(s => s.length > 2);
+}
+
+function classifyIndicator(s) {
+  const refanged = refangText(s);
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(refanged)) return 'IPv4';
+  if (/^[0-9a-f:]+$/i.test(refanged) && refanged.includes(':')) return 'IPv6';
+  if (/^https?:\/\//i.test(refanged) || /hXXp/i.test(s)) return 'URL';
+  if (/\.[a-z]{2,}$/i.test(refanged)) return 'Domain';
+  return 'IOC';
+}
+
+function runDefang() {
+  const raw = document.getElementById('defang-input').value.trim();
+  if (!raw) { showToast('Paste some indicators first'); return; }
+
+  const lines = parseIndicators(raw);
+  const defanged = lines.map(defangText);
+
+  const outEl = document.getElementById('defang-out');
+  outEl.textContent = defanged.join('\n');
+  outEl.className = 'result-content';
+
+  const refEl = document.getElementById('refang-out');
+  refEl.textContent = '(Re-fang input is original text)';
+  refEl.className = 'result-content empty';
+
+  // Build parsed table
+  const area = document.getElementById('ioc-parsed-area');
+  const rows = lines.map((orig, i) => {
+    const type = classifyIndicator(orig);
+    const df = defanged[i];
+    return `<tr>
+      <td>${i+1}</td>
+      <td><span class="badge badge-unknown">${type}</span></td>
+      <td style="color:var(--muted2)">${escHtml(orig)}</td>
+      <td style="color:var(--accent2)">${escHtml(df)}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 10px;font-size:0.65rem;" onclick="navigator.clipboard.writeText('${escHtml(df)}').then(()=>showToast('Copied ✓'))">Copy</button></td>
+    </tr>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="ip-table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Type</th><th>Original</th><th>Defanged</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="ioc-table-text" style="display:none">${lines.map((o,i)=>defanged[i]).join('\n')}</div>
+  `;
+  showToast(`${lines.length} indicator(s) defanged ✓`);
+}
+
+function runRefang() {
+  const raw = document.getElementById('defang-input').value.trim();
+  if (!raw) { showToast('Paste some indicators first'); return; }
+  const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  const refanged = lines.map(refangText);
+  const el = document.getElementById('refang-out');
+  el.textContent = refanged.join('\n');
+  el.className = 'result-content';
+  showToast(`${lines.length} indicator(s) re-fanged ✓`);
+}
+
+function clearDefang() {
+  document.getElementById('defang-input').value = '';
+  document.getElementById('defang-out').textContent = 'Defanged indicators will appear here...';
+  document.getElementById('defang-out').className = 'result-content empty';
+  document.getElementById('refang-out').textContent = 'Re-fanged indicators will appear here...';
+  document.getElementById('refang-out').className = 'result-content empty';
+  document.getElementById('ioc-parsed-area').innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Paste indicators above and click Defang All</div>';
+}
+
+function loadExample(type) {
+  const examples = {
+    url: 'http://malicious-payload.xyz/drop/loader.exe\nhttps://phishing-login.net/secure/update\nftp://exfil.darknet.ru/upload',
+    ip: '185.220.101.45\n45.142.212.100\n194.165.16.88\n77.91.68.150',
+    mixed: 'http://badsite.com/malware.exe\n185.220.101.45\nevildomain.ru\nhttps://phish.net/steal?token=abc123\n45.142.212.100'
+  };
+  document.getElementById('defang-input').value = examples[type];
+}
+
+// ═══════════════════════════════════════
+//  IP LOOKUP (using ip-api.com free tier)
+// ═══════════════════════════════════════
+let ipResultsData = [];
+
+function loadIPExample() {
+  document.getElementById('ip-input').value = '8.8.8.8\n1.1.1.1\n185.220.101.45\n45.142.212.100\n194.165.16.88';
+}
+
+function clearIP() {
+  document.getElementById('ip-input').value = '';
+  document.getElementById('ip-results').innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>Enter IPs above and click Lookup IPs</div>';
+  document.getElementById('ip-summary').style.display = 'none';
+  ipResultsData = [];
+}
+
+const KNOWN_MALICIOUS = ['185.220.101.45','45.142.212.100','194.165.16.88','77.91.68.150'];
+const KNOWN_SAFE = ['8.8.8.8','1.1.1.1','8.8.4.4','9.9.9.9'];
+
+function riskLevel(ip, data) {
+  if (KNOWN_MALICIOUS.includes(ip)) return 'danger';
+  if (KNOWN_SAFE.includes(ip)) return 'safe';
+  if (data.hosting || data.proxy || data.vpn) return 'warn';
+  return 'unknown';
+}
+
+async function runIPLookup() {
+  const raw = document.getElementById('ip-input').value.trim();
+  if (!raw) { showToast('Enter at least one IP'); return; }
+
+  const ips = [...new Set(raw.split(/[\n,\s]+/).map(s => s.trim()).filter(s => /^(\d{1,3}\.){3}\d{1,3}$/.test(s)))];
+  if (!ips.length) { showToast('No valid IPv4 addresses found'); return; }
+
+  const resultsEl = document.getElementById('ip-results');
+  resultsEl.innerHTML = `<div class="placeholder"><span class="loading"></span> Looking up ${ips.length} IP(s)...</div>`;
+
+  try {
+    // ip-api.com batch endpoint (free, no key needed, 15/min)
+    const chunks = [];
+    for (let i = 0; i < ips.length; i += 100) chunks.push(ips.slice(i, i+100));
+
+    let allResults = [];
+    for (const chunk of chunks) {
+      const res = await fetch('http://ip-api.com/batch?fields=status,message,query,country,countryCode,regionName,city,zip,lat,lon,isp,org,as,hosting,proxy,mobile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chunk.map(ip => ({ query: ip })))
+      });
+      const data = await res.json();
+      allResults = allResults.concat(data);
+    }
+
+    ipResultsData = allResults;
+    renderIPTable(allResults);
+    document.getElementById('ip-summary').style.display = '';
+  } catch (e) {
+    // Fallback: simulate results if fetch blocked
+    const simulated = ips.map(ip => simulateIPData(ip));
+    ipResultsData = simulated;
+    renderIPTable(simulated);
+    document.getElementById('ip-summary').style.display = '';
+    showToast('Using simulated data (CORS/network)');
+  }
+}
+
+function simulateIPData(ip) {
+  const isMalicious = KNOWN_MALICIOUS.includes(ip);
+  const isSafe = KNOWN_SAFE.includes(ip);
+  const countries = ['United States','Germany','Netherlands','Russia','China','France'];
+  const isps = ['Google LLC','Cloudflare Inc.','Tor Exit Node','Hosting Services Ltd.','Leaseweb'];
+  return {
+    query: ip,
+    status: 'success',
+    country: isMalicious ? 'Netherlands' : isSafe ? 'United States' : countries[Math.floor(Math.random()*countries.length)],
+    countryCode: isMalicious ? 'NL' : isSafe ? 'US' : 'DE',
+    regionName: isMalicious ? 'North Holland' : 'California',
+    city: isMalicious ? 'Amsterdam' : isSafe ? 'Mountain View' : 'Frankfurt',
+    isp: isMalicious ? 'Tor Exit Node' : isSafe ? (ip === '8.8.8.8' ? 'Google LLC' : 'Cloudflare Inc.') : isps[Math.floor(Math.random()*isps.length)],
+    org: isMalicious ? 'Tor Exit Node' : isSafe ? 'GOOGLE' : 'AS12345 Hosting',
+    as: isMalicious ? 'AS60729 Routing' : 'AS15169 Google',
+    hosting: isMalicious,
+    proxy: isMalicious,
+    mobile: false,
+    lat: 52.37,
+    lon: 4.9,
+  };
+}
+
+function renderIPTable(results) {
+  const resultsEl = document.getElementById('ip-results');
+
+  const rows = results.map(d => {
+    if (d.status === 'fail') {
+      return `<tr>
+        <td style="color:var(--accent)">${escHtml(d.query)}</td>
+        <td colspan="7" style="color:var(--danger)">Lookup failed: ${escHtml(d.message||'unknown')}</td>
+      </tr>`;
+    }
+    const risk = riskLevel(d.query, d);
+    const riskBadge = {
+      danger: '<span class="badge badge-danger">⚠ Malicious</span>',
+      warn: '<span class="badge badge-warn">⚡ Suspicious</span>',
+      safe: '<span class="badge badge-safe">✓ Known Safe</span>',
+      unknown: '<span class="badge badge-unknown">? Unknown</span>'
+    }[risk];
+
+    const flags = [];
+    if (d.hosting) flags.push('<span class="badge badge-warn" style="font-size:0.62rem">Hosting</span>');
+    if (d.proxy) flags.push('<span class="badge badge-danger" style="font-size:0.62rem">Proxy/Tor</span>');
+    if (d.mobile) flags.push('<span class="badge badge-unknown" style="font-size:0.62rem">Mobile</span>');
+
+    return `<tr>
+      <td style="color:var(--accent);font-weight:600">${escHtml(d.query)}</td>
+      <td>${riskBadge}</td>
+      <td>${escHtml(d.country||'—')} <span style="color:var(--muted2);font-size:0.7rem">${escHtml(d.countryCode||'')}</span></td>
+      <td>${escHtml(d.city||'—')}, ${escHtml(d.regionName||'—')}</td>
+      <td style="color:var(--muted2);font-size:0.75rem">${escHtml(d.isp||'—')}</td>
+      <td style="color:var(--muted2);font-size:0.75rem">${escHtml(d.as||'—')}</td>
+      <td>${flags.join(' ')}</td>
+      <td>
+        <button class="btn btn-ghost" style="padding:4px 8px;font-size:0.62rem;" onclick="navigator.clipboard.writeText('${escHtml(d.query)}').then(()=>showToast('Copied ✓'))">Copy IP</button>
+        <a href="https://www.virustotal.com/gui/ip-address/${escHtml(d.query)}" target="_blank" style="margin-left:4px;" class="btn btn-ghost" style="padding:4px 8px;font-size:0.62rem;">VT ↗</a>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const dangerCount = results.filter(d => riskLevel(d.query, d) === 'danger').length;
+  const warnCount = results.filter(d => riskLevel(d.query, d) === 'warn').length;
+
+  resultsEl.innerHTML = `
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="result-box" style="flex:1;min-width:120px;padding:16px 20px;text-align:center;">
+        <div style="font-family:var(--display);font-size:2rem;font-weight:700;color:var(--accent)">${results.length}</div>
+        <div style="font-size:0.7rem;color:var(--muted2);letter-spacing:0.08em;text-transform:uppercase;">Total IPs</div>
+      </div>
+      <div class="result-box" style="flex:1;min-width:120px;padding:16px 20px;text-align:center;">
+        <div style="font-family:var(--display);font-size:2rem;font-weight:700;color:var(--danger)">${dangerCount}</div>
+        <div style="font-size:0.7rem;color:var(--muted2);letter-spacing:0.08em;text-transform:uppercase;">Malicious</div>
+      </div>
+      <div class="result-box" style="flex:1;min-width:120px;padding:16px 20px;text-align:center;">
+        <div style="font-family:var(--display);font-size:2rem;font-weight:700;color:var(--warn)">${warnCount}</div>
+        <div style="font-size:0.7rem;color:var(--muted2);letter-spacing:0.08em;text-transform:uppercase;">Suspicious</div>
+      </div>
+      <div class="result-box" style="flex:1;min-width:120px;padding:16px 20px;text-align:center;">
+        <div style="font-family:var(--display);font-size:2rem;font-weight:700;color:var(--safe)">${results.length - dangerCount - warnCount}</div>
+        <div style="font-size:0.7rem;color:var(--muted2);letter-spacing:0.08em;text-transform:uppercase;">Clean/Unknown</div>
+      </div>
+    </div>
+    <div class="ip-table-wrap">
+      <table>
+        <thead><tr><th>IP Address</th><th>Risk</th><th>Country</th><th>Location</th><th>ISP</th><th>ASN</th><th>Flags</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+  showToast(`${results.length} IP(s) resolved ✓`);
+}
+
+function exportIPCSV() {
+  if (!ipResultsData.length) return;
+  const header = 'IP,Risk,Country,City,ISP,ASN,Hosting,Proxy\n';
+  const rows = ipResultsData.map(d => [
+    d.query, riskLevel(d.query,d), d.country||'', d.city||'', d.isp||'', d.as||'', d.hosting?'Yes':'No', d.proxy?'Yes':'No'
+  ].map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([header+rows], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ip-lookup-results.csv';
+  a.click();
+  showToast('CSV exported ✓');
+}
+
+function copyIPTable() {
+  if (!ipResultsData.length) return;
+  const lines = ipResultsData.map(d =>
+    `${d.query.padEnd(18)} ${(d.country||'').padEnd(18)} ${(d.city||'').padEnd(16)} ${d.isp||''}`
+  );
+  navigator.clipboard.writeText(['IP Address         Country            City             ISP', ...lines].join('\n'))
+    .then(() => showToast('Table copied ✓'));
+}
+
+// ═══════════════════════════════════════
+//  DOMAIN LOOKUP
+// ═══════════════════════════════════════
+function loadDomainExample() {
+  document.getElementById('domain-input').value = 'google.com';
+  runDomainLookup();
+}
+
+async function runDomainLookup() {
+  const domain = document.getElementById('domain-input').value.trim();
+  if (!domain) { showToast('Enter a domain or IP'); return; }
+
+  const el = document.getElementById('domain-results');
+  el.innerHTML = `<div class="placeholder"><span class="loading"></span> Investigating ${escHtml(domain)}...</div>`;
+
+  try {
+    // Use DNS-over-HTTPS for real DNS lookups
+    const [aRes, mxRes, txtRes, nsRes] = await Promise.allSettled([
+      fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`).then(r=>r.json()),
+      fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`).then(r=>r.json()),
+      fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=TXT`).then(r=>r.json()),
+      fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=NS`).then(r=>r.json()),
+    ]);
+
+    const aRecords = aRes.value?.Answer?.map(r => r.data) || [];
+    const mxRecords = mxRes.value?.Answer?.map(r => r.data) || [];
+    const txtRecords = txtRes.value?.Answer?.map(r => r.data) || [];
+    const nsRecords = nsRes.value?.Answer?.map(r => r.data) || [];
+
+    renderDomainResults(domain, { aRecords, mxRecords, txtRecords, nsRecords });
+  } catch(e) {
+    renderDomainResults(domain, {
+      aRecords: ['93.184.216.34'],
+      mxRecords: ['10 mail.example.com.'],
+      txtRecords: ['v=spf1 include:_spf.google.com ~all'],
+      nsRecords: ['ns1.example.com.', 'ns2.example.com.']
+    });
+    showToast('DNS lookup via fallback data');
+  }
+}
+
+function renderDomainResults(domain, data) {
+  const el = document.getElementById('domain-results');
+  const isSuspicious = /\.(xyz|tk|ml|ga|cf|ru|cn)$/.test(domain);
+  const riskBadge = isSuspicious
+    ? '<span class="badge badge-warn">⚡ Suspicious TLD</span>'
+    : '<span class="badge badge-safe">✓ Standard TLD</span>';
+
+  const spf = data.txtRecords.find(r => r.includes('v=spf1'));
+  const dmarc = data.txtRecords.find(r => r.includes('v=DMARC1'));
+  const hasSpf = !!spf;
+  const hasDmarc = !!dmarc;
+
+  el.innerHTML = `
+    <div class="domain-grid">
+
+      <div class="domain-card">
+        <div class="domain-card-header">
+          <div class="domain-card-title">Overview</div>
+          ${riskBadge}
+        </div>
+        <div class="domain-card-body">
+          <div class="kv-row"><span class="kv-key">Domain</span><span class="kv-val accent">${escHtml(domain)}</span></div>
+          <div class="kv-row"><span class="kv-key">TLD</span><span class="kv-val">.${escHtml(domain.split('.').pop())}</span></div>
+          <div class="kv-row"><span class="kv-key">A Records</span><span class="kv-val">${data.aRecords.length > 0 ? data.aRecords.join(', ') : 'None'}</span></div>
+          <div class="kv-row"><span class="kv-key">VT Link</span><span class="kv-val"><a href="https://www.virustotal.com/gui/domain/${escHtml(domain)}" target="_blank" style="color:var(--accent2)">Check on VirusTotal ↗</a></span></div>
+          <div class="kv-row"><span class="kv-key">WHOIS</span><span class="kv-val"><a href="https://whois.domaintools.com/${escHtml(domain)}" target="_blank" style="color:var(--accent2)">DomainTools ↗</a></span></div>
+          <div class="kv-row"><span class="kv-key">Shodan</span><span class="kv-val"><a href="https://www.shodan.io/search?query=${encodeURIComponent(domain)}" target="_blank" style="color:var(--accent2)">View on Shodan ↗</a></span></div>
+        </div>
+      </div>
+
+      <div class="domain-card">
+        <div class="domain-card-header"><div class="domain-card-title">DNS Records</div></div>
+        <div class="domain-card-body">
+          <div class="kv-row"><span class="kv-key">A</span><span class="kv-val">${data.aRecords.join('<br>') || 'None'}</span></div>
+          <div class="kv-row"><span class="kv-key">MX</span><span class="kv-val">${data.mxRecords.join('<br>') || 'None'}</span></div>
+          <div class="kv-row"><span class="kv-key">NS</span><span class="kv-val">${data.nsRecords.join('<br>') || 'None'}</span></div>
+        </div>
+      </div>
+
+      <div class="domain-card">
+        <div class="domain-card-header"><div class="domain-card-title">Email Security</div></div>
+        <div class="domain-card-body">
+          <div class="kv-row">
+            <span class="kv-key">SPF</span>
+            <span class="kv-val ${hasSpf ? '' : 'danger'}">${hasSpf ? '✓ Present' : '✗ Missing'}</span>
+          </div>
+          ${hasSpf ? `<div class="kv-row"><span class="kv-key">SPF Value</span><span class="kv-val" style="font-size:0.72rem;color:var(--muted2)">${escHtml(spf)}</span></div>` : ''}
+          <div class="kv-row">
+            <span class="kv-key">DMARC</span>
+            <span class="kv-val ${hasDmarc ? '' : 'warn'}">${hasDmarc ? '✓ Present' : '⚠ Missing'}</span>
+          </div>
+          <div class="kv-row"><span class="kv-key">TXT Records</span><span class="kv-val">${data.txtRecords.length} found</span></div>
+        </div>
+      </div>
+
+      <div class="domain-card">
+        <div class="domain-card-header"><div class="domain-card-title">TXT Records</div></div>
+        <div class="domain-card-body">
+          ${data.txtRecords.length
+            ? data.txtRecords.map(r => `<div class="kv-row" style="flex-direction:column;gap:2px;"><span style="font-size:0.7rem;color:var(--accent2);word-break:break-all;">${escHtml(r)}</span></div>`).join('')
+            : '<div style="color:var(--muted);font-size:0.8rem;">No TXT records found</div>'
+          }
+        </div>
+      </div>
+
+      <div class="domain-card">
+        <div class="domain-card-header"><div class="domain-card-title">Quick Intel Links</div></div>
+        <div class="domain-card-body">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <a href="https://www.virustotal.com/gui/domain/${escHtml(domain)}" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;">🔍 VirusTotal</a>
+            <a href="https://whois.domaintools.com/${escHtml(domain)}" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;">📋 DomainTools WHOIS</a>
+            <a href="https://www.shodan.io/search?query=${encodeURIComponent(domain)}" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;">🔭 Shodan</a>
+            <a href="https://urlscan.io/search/#domain%3A${encodeURIComponent(domain)}" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;">🌐 URLScan.io</a>
+            <a href="https://threatfox.abuse.ch/browse.php?search=ioc%3A${encodeURIComponent(domain)}" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;">☠ ThreatFox</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-card">
+        <div class="domain-card-header"><div class="domain-card-title">Defanged Form</div></div>
+        <div class="domain-card-body">
+          <div class="kv-row"><span class="kv-key">Defanged</span><span class="kv-val accent">${escHtml(defangText(domain))}</span></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('${escHtml(defangText(domain))}').then(()=>showToast('Copied ✓'))">Copy Defanged</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('ip-input').value='${data.aRecords.join('\\n')}';switchTab('iplookup',document.querySelectorAll('.tab-btn')[1])">Lookup IPs ↗</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════
+//  PORT REFERENCE
+// ═══════════════════════════════════════
+const PORTS = [
+  { port: 20, proto: 'TCP', name: 'FTP Data', desc: 'File Transfer Protocol data channel. Used for active mode file transfers.', risk: 'medium', tags: ['file-transfer','legacy'] },
+  { port: 21, proto: 'TCP', name: 'FTP Control', desc: 'FTP command/control channel. Often targeted for brute force and anonymous login.', risk: 'high', tags: ['file-transfer','legacy','brute-force'] },
+  { port: 22, proto: 'TCP', name: 'SSH', desc: 'Secure Shell remote access. Common target for brute force; should be key-auth only.', risk: 'medium', tags: ['remote-access','encryption'] },
+  { port: 23, proto: 'TCP', name: 'Telnet', desc: 'Unencrypted remote shell. Deprecated; presence is a critical red flag.', risk: 'critical', tags: ['legacy','cleartext','remote-access'] },
+  { port: 25, proto: 'TCP', name: 'SMTP', desc: 'Simple Mail Transfer Protocol. Used for email relay; often abused for spam.', risk: 'medium', tags: ['email','relay'] },
+  { port: 53, proto: 'TCP/UDP', name: 'DNS', desc: 'Domain Name System. DNS tunneling is a common C2 channel.', risk: 'medium', tags: ['dns','c2','exfil'] },
+  { port: 80, proto: 'TCP', name: 'HTTP', desc: 'Unencrypted web traffic. Malware often uses port 80 for C2 to blend with traffic.', risk: 'medium', tags: ['web','c2'] },
+  { port: 110, proto: 'TCP', name: 'POP3', desc: 'Post Office Protocol. Cleartext email retrieval.', risk: 'high', tags: ['email','cleartext'] },
+  { port: 135, proto: 'TCP', name: 'MS RPC', desc: 'Microsoft RPC endpoint mapper. Heavily exploited in Windows environments.', risk: 'high', tags: ['windows','lateral-movement'] },
+  { port: 139, proto: 'TCP', name: 'NetBIOS', desc: 'NetBIOS session service. Associated with SMB; used in lateral movement.', risk: 'high', tags: ['windows','lateral-movement','smb'] },
+  { port: 143, proto: 'TCP', name: 'IMAP', desc: 'Internet Message Access Protocol. Cleartext email access.', risk: 'medium', tags: ['email','cleartext'] },
+  { port: 161, proto: 'UDP', name: 'SNMP', desc: 'Simple Network Management Protocol. V1/V2 use cleartext community strings.', risk: 'high', tags: ['network','cleartext'] },
+  { port: 443, proto: 'TCP', name: 'HTTPS', desc: 'Encrypted web traffic. Malware increasingly uses HTTPS for encrypted C2.', risk: 'low', tags: ['web','encryption','c2'] },
+  { port: 445, proto: 'TCP', name: 'SMB', desc: 'Server Message Block. EternalBlue exploit target; used in ransomware propagation.', risk: 'critical', tags: ['windows','ransomware','lateral-movement','eternalblue'] },
+  { port: 465, proto: 'TCP', name: 'SMTPS', desc: 'SMTP over SSL/TLS. Secure email submission.', risk: 'low', tags: ['email','encryption'] },
+  { port: 514, proto: 'UDP', name: 'Syslog', desc: 'System logging. Cleartext; tampering can hide attacker activity.', risk: 'medium', tags: ['logging','cleartext'] },
+  { port: 587, proto: 'TCP', name: 'SMTP/TLS', desc: 'Mail submission with STARTTLS. Modern email sending standard.', risk: 'low', tags: ['email','encryption'] },
+  { port: 636, proto: 'TCP', name: 'LDAPS', desc: 'Secure LDAP over SSL. Active Directory queries.', risk: 'low', tags: ['directory','encryption'] },
+  { port: 1433, proto: 'TCP', name: 'MS SQL', desc: 'Microsoft SQL Server. Common lateral movement target; xp_cmdshell abuse.', risk: 'critical', tags: ['database','windows','lateral-movement'] },
+  { port: 1723, proto: 'TCP', name: 'PPTP', desc: 'Point-to-Point Tunneling Protocol VPN. Weak encryption; deprecated.', risk: 'high', tags: ['vpn','legacy'] },
+  { port: 3306, proto: 'TCP', name: 'MySQL', desc: 'MySQL database. Should never be exposed to internet.', risk: 'critical', tags: ['database'] },
+  { port: 3389, proto: 'TCP', name: 'RDP', desc: 'Remote Desktop Protocol. Major ransomware entry point; BlueKeep target.', risk: 'critical', tags: ['windows','remote-access','ransomware','brute-force'] },
+  { port: 4444, proto: 'TCP', name: 'Metasploit', desc: 'Default Metasploit listener port. Presence almost always indicates compromise.', risk: 'critical', tags: ['malware','c2','metasploit'] },
+  { port: 4899, proto: 'TCP', name: 'Radmin', desc: 'Remote Administrator tool. Used by attackers for persistent access.', risk: 'high', tags: ['remote-access','rat'] },
+  { port: 5432, proto: 'TCP', name: 'PostgreSQL', desc: 'PostgreSQL database server. Should be firewalled from internet.', risk: 'high', tags: ['database'] },
+  { port: 5900, proto: 'TCP', name: 'VNC', desc: 'Virtual Network Computing. Often misconfigured without auth.', risk: 'critical', tags: ['remote-access','lateral-movement'] },
+  { port: 6667, proto: 'TCP', name: 'IRC', desc: 'Internet Relay Chat. Classic botnet C2 channel.', risk: 'high', tags: ['c2','botnet'] },
+  { port: 8080, proto: 'TCP', name: 'HTTP Alt', desc: 'Alternate HTTP. Used by proxies, dev servers, and malware C2.', risk: 'medium', tags: ['web','c2','proxy'] },
+  { port: 8443, proto: 'TCP', name: 'HTTPS Alt', desc: 'Alternate HTTPS. Used by management interfaces and malware.', risk: 'medium', tags: ['web','c2'] },
+  { port: 9200, proto: 'TCP', name: 'Elasticsearch', desc: 'Elasticsearch API. Frequently misconfigured with no auth.', risk: 'critical', tags: ['database','misconfiguration'] },
+  { port: 27017, proto: 'TCP', name: 'MongoDB', desc: 'MongoDB database. Historically exposed without auth.', risk: 'critical', tags: ['database','misconfiguration'] },
+  { port: 6379, proto: 'TCP', name: 'Redis', desc: 'Redis in-memory store. Frequently exposed without auth; used for cryptomining.', risk: 'critical', tags: ['database','misconfiguration','cryptomining'] },
+  { port: 11211, proto: 'TCP/UDP', name: 'Memcached', desc: 'Memcached caching server. Exploited for DDoS amplification attacks.', risk: 'high', tags: ['ddos','amplification'] },
+  { port: 500, proto: 'UDP', name: 'IKE/IPSec', desc: 'Internet Key Exchange for IPSec VPN.', risk: 'low', tags: ['vpn','encryption'] },
+  { port: 1194, proto: 'UDP', name: 'OpenVPN', desc: 'OpenVPN default port. Legitimate VPN traffic.', risk: 'low', tags: ['vpn','encryption'] },
+];
+
+function filterPorts() {
+  const search = document.getElementById('port-search').value.toLowerCase();
+  const proto = document.getElementById('port-filter').value;
+  const risk = document.getElementById('risk-filter').value;
+
+  const filtered = PORTS.filter(p => {
+    const matchSearch = !search || p.port.toString().includes(search) || p.name.toLowerCase().includes(search) || p.desc.toLowerCase().includes(search) || p.tags.some(t => t.includes(search));
+    const matchProto = !proto || p.proto === proto || p.proto.includes(proto);
+    const matchRisk = !risk || p.risk === risk;
+    return matchSearch && matchProto && matchRisk;
+  });
+
+  renderPortGrid(filtered);
+}
+
+function renderPortGrid(ports) {
+  const grid = document.getElementById('port-grid');
+  if (!ports.length) {
+    grid.innerHTML = '<div class="placeholder" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>No ports match your search</div>';
+    return;
+  }
+  const riskColor = { critical: 'danger', high: 'warn', medium: 'unknown', low: 'safe' };
+  grid.innerHTML = ports.map(p => `
+    <div class="port-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="port-number">${p.port}</div>
+          <div class="port-proto">${p.proto}</div>
+        </div>
+        <span class="badge badge-${riskColor[p.risk]}">${p.risk}</span>
+      </div>
+      <div class="port-name">${escHtml(p.name)}</div>
+      <div class="port-desc">${escHtml(p.desc)}</div>
+      <div class="tag-list">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+// Init port grid
+renderPortGrid(PORTS);
+
+// ═══════════════════════════════════════
+//  HASH / ENCODE
+// ═══════════════════════════════════════
+function doEncode(action) {
+  const input = document.getElementById('encode-input').value;
+  const outEl = document.getElementById('encode-out');
+  const labelEl = document.getElementById('encode-label');
+  let result = '';
+  let label = 'Output';
+
+  try {
+    switch(action) {
+      case 'b64encode':
+        result = btoa(unescape(encodeURIComponent(input)));
+        label = 'Base64 Encoded';
+        break;
+      case 'b64decode':
+        result = decodeURIComponent(escape(atob(input.trim())));
+        label = 'Base64 Decoded';
+        break;
+      case 'urlencode':
+        result = encodeURIComponent(input);
+        label = 'URL Encoded';
+        break;
+      case 'urldecode':
+        result = decodeURIComponent(input);
+        label = 'URL Decoded';
+        break;
+      case 'hexencode':
+        result = Array.from(new TextEncoder().encode(input)).map(b => b.toString(16).padStart(2,'0')).join('');
+        label = 'Hex Encoded';
+        break;
+      case 'hexdecode':
+        result = new TextDecoder().decode(new Uint8Array(input.trim().match(/.{1,2}/g).map(b => parseInt(b,16))));
+        label = 'Hex Decoded';
+        break;
+      case 'identify':
+        result = identifyHash(input.trim());
+        label = 'Hash Identification';
+        break;
+    }
+    outEl.textContent = result;
+    outEl.className = 'result-content';
+    labelEl.textContent = label;
+  } catch(e) {
+    outEl.textContent = 'Error: ' + e.message;
+    outEl.className = 'result-content';
+    outEl.style.color = 'var(--danger)';
+  }
+}
+
+function identifyHash(h) {
+  const len = h.length;
+  const isHex = /^[0-9a-fA-F]+$/.test(h);
+  const isB64 = /^[A-Za-z0-9+/=]+$/.test(h);
+  const lines = [];
+
+  if (isHex) {
+    if (len === 32) lines.push('✓ MD5 (128-bit, 32 hex chars)');
+    if (len === 40) lines.push('✓ SHA-1 (160-bit, 40 hex chars)');
+    if (len === 56) lines.push('✓ SHA-224 (224-bit, 56 hex chars)');
+    if (len === 64) lines.push('✓ SHA-256 (256-bit, 64 hex chars)');
+    if (len === 96) lines.push('✓ SHA-384 (384-bit, 96 hex chars)');
+    if (len === 128) lines.push('✓ SHA-512 (512-bit, 128 hex chars)');
+    if (len === 32) lines.push('  Also possible: NTLM, MD5-crypt');
+  }
+
+  if (h.startsWith('$2b$') || h.startsWith('$2a$') || h.startsWith('$2y$')) lines.push('✓ bcrypt hash');
+  if (h.startsWith('$6$')) lines.push('✓ SHA-512 crypt (Linux shadow)');
+  if (h.startsWith('$5$')) lines.push('✓ SHA-256 crypt (Linux shadow)');
+  if (h.startsWith('$1$')) lines.push('✓ MD5 crypt (Linux shadow)');
+
+  if (isB64 && len % 4 === 0 && !isHex) lines.push('? Possibly Base64-encoded data (try Base64 Decode)');
+  if (h.includes(':') && isHex) lines.push('? Possible hash:salt format');
+
+  if (!lines.length) lines.push('✗ Unknown format — could not match to known hash type\n  Length: ' + len + ' chars');
+
+  lines.push('');
+  lines.push('ℹ Entropy indicators:');
+  lines.push('  Length: ' + len + ' characters');
+  lines.push('  Is hex: ' + (isHex ? 'Yes' : 'No'));
+  lines.push('  Is Base64-like: ' + (isB64 ? 'Yes' : 'No'));
+
+  return lines.join('\n');
+}
+
+// ═══════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
