@@ -1,9 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta http-equiv="refresh" content="0; url=soc-toolkit.html">
+  <meta charset="UTF-8">
+  <title>SOC Utility Toolkit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #38bdf8;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      background: #334155;
+      transform: scale(1.05);
+    }
+
+    a {
+      text-decoration: none;
+      color: white;
+    }
+  </style>
 </head>
+
 <body>
-  <p>Redirecting to SOC Toolkit...</p>
+
+  <h1>🛡️ SOC Utility Toolkit</h1>
+  <p>Quick tools for SOC Analysts</p>
+
+  <div class="container">
+
+    <a href="soc-toolkit.html">
+      <div class="card">🔗 URL Defanger</div>
+    </a>
+
+    <a href="soc-toolkit.html">
+      <div class="card">🌐 IP Lookup</div>
+    </a>
+
+    <a href="soc-toolkit.html">
+      <div class="card">🧠 Domain Lookup</div>
+    </a>
+
+    <a href="soc-toolkit.html">
+      <div class="card">🦠 VirusTotal Enrichment</div>
+    </a>
+
+  </div>
+
 </body>
 </html>
